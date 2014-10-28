@@ -301,7 +301,6 @@ public class SSOGatewayLoginModule implements LoginModule {
         try {
             // obtain user roles principals and add it to the subject
             SSOIdentityManagerService im = Lookup.getInstance().lookupSSOAgent().getSSOIdentityManager();
-
             return im.findRolesBySSOSessionId(requester, _currentSSOSessionId);
         } catch(Exception e) {
             logger.error("Session login failed for Principal : " + _ssoUserPrincipal, e);
