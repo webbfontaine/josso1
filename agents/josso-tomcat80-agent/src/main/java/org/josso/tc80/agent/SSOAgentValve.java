@@ -113,7 +113,9 @@ public class SSOAgentValve extends ValveBase
         LocalSession localSession = (LocalSession) _sessionMap.get(event.getSession().getId());
 
         if (event.getType().equals(Session.SESSION_DESTROYED_EVENT)) {
-            localSession.expire();
+            if(localSession!=null){
+                localSession.expire();
+            }
             _sessionMap.remove(event.getSession().getId());
         }
             
