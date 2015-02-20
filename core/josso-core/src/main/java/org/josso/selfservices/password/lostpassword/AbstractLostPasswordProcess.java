@@ -22,27 +22,30 @@
 
 package org.josso.selfservices.password.lostpassword;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.josso.auth.Credential;
+import org.josso.auth.CredentialProvider;
+import org.josso.auth.exceptions.AuthenticationFailureException;
+import org.josso.gateway.SSOException;
 import org.josso.gateway.identity.SSOUser;
 import org.josso.gateway.identity.exceptions.SSOIdentityException;
-import org.josso.gateway.identity.exceptions.NoSuchUserException;
 import org.josso.gateway.identity.service.SSOIdentityManager;
-import org.josso.gateway.SSOException;
-import org.josso.selfservices.password.*;
-import org.josso.selfservices.annotations.Action;
-import org.josso.selfservices.annotations.Extension;
 import org.josso.selfservices.ChallengeResponseCredential;
 import org.josso.selfservices.ProcessRequest;
 import org.josso.selfservices.ProcessResponse;
 import org.josso.selfservices.ProcessState;
-import org.josso.auth.Credential;
-import org.josso.auth.CredentialProvider;
-import org.josso.auth.exceptions.AuthenticationFailureException;
+import org.josso.selfservices.annotations.Action;
+import org.josso.selfservices.annotations.Extension;
+import org.josso.selfservices.password.BasePasswordManagementProcess;
+import org.josso.selfservices.password.PasswordDistributor;
+import org.josso.selfservices.password.PasswordGenerator;
+import org.josso.selfservices.password.PasswordManagementException;
+import org.josso.selfservices.password.PasswordManagementProcess;
 import org.josso.util.id.IdGenerator;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Base service class with standard utils.
@@ -66,7 +69,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
 
     private IdGenerator idGenerator;
 
-    @Extension( EXT_URL_PROVIDER)
+    @Extension(EXT_URL_PROVIDER)
     private LostPasswordUrlProvider urlProvider;
 
     // ---------------------------------------------------------------------------------------------------
@@ -130,7 +133,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
         super.stop();
     }
 
-    @Action( fromSteps = {STEP_REQUEST_CHALLENGES, STEP_REQUEST_ADDITIONAL_CHALLENGES} )
+    @Action(fromSteps = {STEP_REQUEST_CHALLENGES, STEP_REQUEST_ADDITIONAL_CHALLENGES})
     public ProcessResponse processChallenges(ProcessRequest request) {
 
         try {
@@ -149,7 +152,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
             Set<ChallengeResponseCredential> challenges = retrieveAllChallenges();
 
             ChallengeResponseCredential[] additionalChallenges = createAdditionalChallenges(challenges);
-            if (additionalChallenges != null && additionalChallenges.length > 0 ) {
+            if (additionalChallenges != null && additionalChallenges.length > 0) {
 
                 if (log.isDebugEnabled())
                     log.debug("Requesting additional challengis");
@@ -164,7 +167,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
                 log.debug("Starting password reset");
 
             // Authenticate user !
-            SSOUser user = authenticate (challenges);
+            SSOUser user = authenticate(challenges);
             if (log.isDebugEnabled())
                 log.debug("User " + user.getName() + " authenticated");
 
@@ -194,9 +197,9 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
             // Request confirmation challenges after password distribution
             ProcessResponse response = createResponse(STEP_CONFIRM_PASSWORD);
             ChallengeResponseCredential[] confirmationChallenges = createConfirmationChallenges();
-            if (confirmationChallenges != null && confirmationChallenges.length > 0 ) {
+            if (confirmationChallenges != null && confirmationChallenges.length > 0) {
                 storeAllChallenges(confirmationChallenges);
-                response.setAttribute(ATTR_CHALLENGES, confirmationChallenges );
+                response.setAttribute(ATTR_CHALLENGES, confirmationChallenges);
             }
 
             return response;
@@ -207,7 +210,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
             response.setAttribute("error", e);
             return response;
 
-        } catch (Exception  e) {
+        } catch (Exception e) {
             log.error("Fatal error error " + e.getMessage(), e);
             ProcessResponse response = createFinalResponse(STEP_FATAL_ERROR);
             response.setAttribute("error", e);
@@ -217,8 +220,8 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
 
     }
 
-    @Action (fromSteps = {STEP_CONFIRM_PASSWORD, STEP_REQUEST_ADDITIONAL_CONFIRMATION_CHALLENGES})
-    public ProcessResponse requestPasswordConfirmation(ProcessRequest request)  throws PasswordManagementException {
+    @Action(fromSteps = {STEP_CONFIRM_PASSWORD, STEP_REQUEST_ADDITIONAL_CONFIRMATION_CHALLENGES})
+    public ProcessResponse requestPasswordConfirmation(ProcessRequest request) throws PasswordManagementException {
 
         ChallengeResponseCredential[] c = (ChallengeResponseCredential[]) request.getAttribute(ATTR_CHALLENGES);
         storeAllChallenges(c);
@@ -246,7 +249,6 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
                 if (log.isDebugEnabled())
                     log.debug("Account updated : " + user.getName());
 
-
             } catch (AuthenticationFailureException e) {
                 log.error(e.getMessage(), e);
                 return createFinalResponse(STEP_AUTH_ERROR);
@@ -261,24 +263,23 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
         return createFinalResponse(STEP_PASSWORD_RESETED);
     }
 
-    @Action ( fromSteps = { STEP_PASSWORD_RESETED} )
+    @Action(fromSteps = {STEP_PASSWORD_RESETED})
     public ProcessResponse passwordResetted(ProcessRequest request) {
         this.stop();
         return createFinalResponse(null);
     }
 
-    @Action ( fromSteps = { STEP_FATAL_ERROR})
+    @Action(fromSteps = {STEP_FATAL_ERROR})
     public ProcessResponse fatalError(ProcessRequest r) {
         this.stop();
         return createFinalResponse(null);
     }
 
-    @Action ( fromSteps = { STEP_AUTH_ERROR})
+    @Action(fromSteps = {STEP_AUTH_ERROR})
     public ProcessResponse authError(ProcessRequest r) {
         this.stop();
         return createFinalResponse(null);
     }
-
 
     // ----------------------------------------------------------< Process Primitive methods >
 
@@ -323,8 +324,8 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
 
         log.debug("Creating password assertion challenge");
 
-        ChallengeResponseCredential c = new ChallengeResponseCredential (CHALLENGE_PWD_ASSERTION_ID, "Password Assertion");
-        return new ChallengeResponseCredential [] {c};
+        ChallengeResponseCredential c = new ChallengeResponseCredential(CHALLENGE_PWD_ASSERTION_ID, "Password Assertion");
+        return new ChallengeResponseCredential[]{c};
     }
 
     /**
@@ -340,8 +341,6 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
     protected ChallengeResponseCredential[] createAdditionalConfirmationChallenges(Set<ChallengeResponseCredential> challenges) {
         return null;
     }
-
-
 
     /**
      * Authenticates a user based on a set of challenges.  This method will be invoked after initial and additional
@@ -387,9 +386,8 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
     protected void updateAccount(SSOUser user, Credential password) throws PasswordManagementException {
         if (log.isDebugEnabled())
             log.debug("Updating user account for " + user.getName());
-
         try {
-           identityManager.updateAccountPassword(user, password);
+            identityManager.updateAccountPassword(user, password);
         } catch (SSOIdentityException e) {
             throw new PasswordManagementException(e.getMessage(), e);
         }
@@ -400,7 +398,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
      * @param user
      * @return
      */
-    protected String generateAssertionId(SSOUser user)  throws PasswordManagementException {
+    protected String generateAssertionId(SSOUser user) {
         if (log.isDebugEnabled())
             log.debug("Generating assertion ID for " + user.getName());
 
@@ -437,7 +435,6 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
 
     // -------------------------------------------------------------------------< Some utils >
 
-
     protected LostPasswordProcessState getLostPasswordState() {
         return (LostPasswordProcessState) getState();
     }
@@ -464,7 +461,7 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
             getLostPasswordState().getChallenges().add(challenge);
 
             if (log.isDebugEnabled())
-                log.debug("Storing challenge : " + challenge.getId() + " ["+challenge.getResponse()+"]");
+                log.debug("Storing challenge : " + challenge.getId() + " [" + challenge.getResponse() + "]");
         }
     }
 
@@ -492,7 +489,6 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
     public void setCredentialProvider(CredentialProvider credentialProvider) {
         this.credentialProvider = credentialProvider;
     }
-
 
     /**
      * @org.apache.xbean.Property alias="password-distributor"
@@ -542,6 +538,5 @@ public abstract class AbstractLostPasswordProcess extends BasePasswordManagement
     public void setIdentityManager(SSOIdentityManager identityManager) {
         this.identityManager = identityManager;
     }
-
 
 }
