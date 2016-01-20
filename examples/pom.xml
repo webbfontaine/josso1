@@ -49,7 +49,7 @@
     <parent>
         <groupId>org.josso</groupId>
         <artifactId>josso-parent</artifactId>
-        <version>1.8.9</version>
+        <version>1.8.11-SNAPSHOT</version>
     </parent>
 
     <groupId>org.josso</groupId>
@@ -78,6 +78,7 @@
                 <module>josso-partner-wl81</module>
                 <module>josso-partner-wl10</module>
                 <module>josso-partner-wl92</module>
+                <module>josso-partner-wl12</module>
             </modules>
         </profile>
     </profiles>

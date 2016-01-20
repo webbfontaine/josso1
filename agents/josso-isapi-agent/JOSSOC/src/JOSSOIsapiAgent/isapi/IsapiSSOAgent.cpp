@@ -119,9 +119,25 @@ string IsapiSSOAgent::buildGwyLoginUrl(SSOAgentRequest *req, string url) {
 
 	// Add extension ACS endpont
 	url.append(getExtensionUri());
-	url.append("%3Fjosso_security_check&amp;");
-	url.append("josso_partnerapp_host=");
+	url.append("%3Fjosso_security_check");
+	url.append("&josso_partnerapp_host=");
 	url.append(host.c_str()); // TODO : Take host from baseBackTo URL if any ?
+
+    if (req->getParameter("josso_login_optional").empty()) {
+        // Add Force Authn parameter
+        string pForceAuthn = req->getParameter("josso_force_authn");
+        std::transform(pForceAuthn.begin(), pForceAuthn.end(), pForceAuthn.begin(), tolower);
+        if (!pForceAuthn.empty() && strcmp(pForceAuthn.c_str(), "false") != 0) {
+            url.append("&josso_cmd=login_force");
+        }
+
+        // Add Authn Ctx parameter
+        string pAuthnCtx = req->getParameter("josso_authn_ctx");
+        if (!pAuthnCtx.empty()) {
+            url.append("&josso_authn_ctx=");
+            url.append(pAuthnCtx.c_str());
+        }
+    }
 
 	return url;
 
@@ -195,6 +211,7 @@ SSOAgentRequest *IsapiSSOAgent::initIsapiExtensionRequest(LPEXTENSION_CONTROL_BL
 const char *IsapiSSOAgent::getRequester(SSOAgentRequest *req) {
 
 	string originalResource = req->getPath();
+	string &host = req->getHost();
 
 	// Look for original resource as JOSSO_RESOURCE:
 	if (originalResource.empty() || !originalResource.find(this->getExtensionUri())) {
@@ -211,7 +228,7 @@ const char *IsapiSSOAgent::getRequester(SSOAgentRequest *req) {
 	jk_log(req->logger, JK_LOG_TRACE, "Looking application definition for [%s]", originalResource.c_str());
 
 	if (!originalResource.empty()) {
-		PartnerAppConfig *appCfg = getPartnerAppConfig(originalResource);
+		PartnerAppConfig *appCfg = getPartnerAppConfig(host, originalResource);
 		if (appCfg != NULL) {
 			jk_log(req->logger, JK_LOG_TRACE, "Found application definition %s for [%s]",
 				appCfg->getId(), originalResource.c_str());

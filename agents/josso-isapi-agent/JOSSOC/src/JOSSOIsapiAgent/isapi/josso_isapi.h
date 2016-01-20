@@ -26,8 +26,8 @@
 /************** START OF AREA TO MODIFY BEFORE RELEASING *************/
 #define JOSSO_VERMAJOR     1
 #define JOSSO_VERMINOR     8
-#define JOSSO_VERFIX       4
-#define JOSSO_VERSTRING    "1.8.10"
+#define JOSSO_VERFIX       10
+#define JOSSO_VERSTRING    "1.8.11"
 
 /* set JOSSO_VERISRELEASE to 1 when release (do not forget to commit!) */
 #define JOSSO_VERISRELEASE 1

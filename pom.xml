@@ -27,7 +27,7 @@
 
     <groupId>org.josso</groupId>
     <artifactId>josso-parent</artifactId>
-    <version>1.8.9</version>
+    <version>1.8.11-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JOSSO</name>
     <description>
@@ -63,6 +63,8 @@
         <junit-version>4.4</junit-version>
         <cxf-version>2.2.2</cxf-version>
         <spring-security-v3-version>3.1.3.RELEASE</spring-security-v3-version>
+
+	<update>001</update>
     </properties>
 
     <profiles>
@@ -162,6 +164,29 @@
                     <dependency>
                         <groupId>org.josso</groupId>
                         <artifactId>josso-weblogic10-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <type>jar</type>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <classifier>mbeans-src</classifier>
+                        <type>zip</type>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <classifier>mbeans-src</classifier>
+                        <type>tar.gz</type>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
                         <version>${pom.version}</version>
                         <type>jar</type>
                     </dependency>
@@ -269,6 +294,44 @@
                     <dependency>
                         <groupId>org.josso</groupId>
                         <artifactId>josso-weblogic10-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <type>jar</type>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+
+            <modules>
+                <module>core</module>
+                <module>components</module>
+                <module>agents</module>
+            </modules>
+
+        </profile>
+
+        <profile>
+            <id>weblogic12</id>
+
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <classifier>mbeans-src</classifier>
+                        <type>zip</type>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
+                        <version>${pom.version}</version>
+                        <classifier>mbeans-src</classifier>
+                        <type>tar.gz</type>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.josso</groupId>
+                        <artifactId>josso-weblogic12-agent</artifactId>
                         <version>${pom.version}</version>
                         <type>jar</type>
                     </dependency>
@@ -550,7 +613,7 @@
         </repository>
 
         <!-- Codehaus -->
-        <repository>
+        <!--repository>
             <id>codehaus</id>
             <name>Codehaus repository</name>
             <url>http://repository.codehaus.org</url>
@@ -560,7 +623,7 @@
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
-        </repository>
+        </repository-->
         <!-- Java.net -->
         <repository>
             <id>java.net</id>
@@ -1331,6 +1394,27 @@
             <dependency>
                 <groupId>org.josso</groupId>
                 <artifactId>josso-partner-wl10-app</artifactId>
+                <version>${pom.version}</version>
+                <type>ear</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.josso</groupId>
+                <artifactId>josso-partner-wl12-ejb</artifactId>
+                <version>${pom.version}</version>
+                <type>ejb</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.josso</groupId>
+                <artifactId>josso-partner-wl12-web</artifactId>
+                <version>${pom.version}</version>
+                <type>war</type>
+            </dependency>
+
+            <dependency>
+                <groupId>org.josso</groupId>
+                <artifactId>josso-partner-wl12-app</artifactId>
                 <version>${pom.version}</version>
                 <type>ear</type>
             </dependency>

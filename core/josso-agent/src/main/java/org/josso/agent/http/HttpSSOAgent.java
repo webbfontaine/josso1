@@ -322,7 +322,7 @@ public abstract class HttpSSOAgent extends AbstractSSOAgent {
         // Support specifying an external form for each application.
         SSOPartnerAppConfig appCfg = getPartnerAppConfig(hreq.getServerName(), hreq.getContextPath());
         String logoutUrl = null;
-        if (appCfg != null && appCfg.getGatewayLoginUrl() != null) {
+        if (appCfg != null && appCfg.getGatewayLogoutUrl() != null) {
             logoutUrl = appCfg.getGatewayLogoutUrl();
         } else {
             logoutUrl = getGatewayLogoutUrl();
@@ -349,6 +349,14 @@ public abstract class HttpSSOAgent extends AbstractSSOAgent {
             loginUrl = appCfg.getGatewayLoginUrl();
         } else {
             loginUrl = getGatewayLoginUrl();
+        }
+
+        if (hreq.getParameter("josso_force_authn") != null && Boolean.parseBoolean(hreq.getParameter("josso_force_authn"))) {
+            loginUrl = loginUrl + (loginUrl.indexOf('?') >= 0 ? "&" : "?") +  "josso_cmd=login_force";
+        }
+
+        if (hreq.getParameter("josso_authn_ctx") != null) {
+            loginUrl = loginUrl + (loginUrl.indexOf('?') >= 0 ? "&" : "?") +  "josso_authn_ctx=" + hreq.getParameter("josso_authn_ctx");
         }
 
         String backto = buildBackToURL(hreq, getJossoSecurityCheckUri());
@@ -753,7 +761,10 @@ public abstract class HttpSSOAgent extends AbstractSSOAgent {
         try {
 
             SSOAgentRequest request = _currentRequest.get();
-            SSOIdentityManagerService im = request.getConfig(this).getIdentityManagerService();
+            SSOIdentityManagerService im = null;
+            if (request != null) {
+                im = request.getConfig(this).getIdentityManagerService();
+            }
             if (im == null) {
                 im = this.getSSOIdentityManager();
 
